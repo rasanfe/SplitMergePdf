@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection.Metadata;
-using iText.Forms;
+﻿using iText.Forms;
 using iText.Forms.Fields;
 using iText.Kernel.Pdf;
 using iText.Kernel.Utils;
@@ -30,7 +26,8 @@ namespace SplitMergePdf
             bool merged = true;
             try
             {
-                PdfDocument pdfDoc = new PdfDocument(new PdfWriter(targetPdf).SetSmartMode(true));
+                PdfWriter writer = new PdfWriter(targetPdf).SetSmartMode(true);
+                PdfDocument pdfDoc = new PdfDocument(writer);
 
                 int numDoc = 0;
                 foreach (string file in fileNames)
@@ -57,6 +54,7 @@ namespace SplitMergePdf
 
                 }
                 pdfDoc.Close();
+                writer.Close();
             }
             catch (Exception ex)
             {

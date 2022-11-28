@@ -58,6 +58,8 @@ Console.WriteLine("");
 Console.WriteLine("¿ Desea eliminar los archivos generados ? S/N");
 string borrar = Console.ReadLine();
 
+
+
 if (borrar.ToUpper().Equals("S"))
 {
     List<string> strFiles = Directory.GetFiles(outputPath, "*.pdf", SearchOption.TopDirectoryOnly).ToList();
@@ -67,5 +69,5 @@ if (borrar.ToUpper().Equals("S"))
     }
 }
 
-
+System.Diagnostics.Process.Start("explorer", outputPath);
 
