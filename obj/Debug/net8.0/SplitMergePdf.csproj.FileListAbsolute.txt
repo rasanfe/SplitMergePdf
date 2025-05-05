@@ -1,0 +1,12 @@
+C:\proyecto pw2022\Blog\Net8\SplitMergePdf\obj\Debug\net8.0\SplitMergePdf.csproj.AssemblyReference.cache
+C:\proyecto pw2022\Blog\Net8\SplitMergePdf\obj\Debug\net8.0\SplitMergePdf.GeneratedMSBuildEditorConfig.editorconfig
+C:\proyecto pw2022\Blog\Net8\SplitMergePdf\obj\Debug\net8.0\SplitMergePdf.AssemblyInfoInputs.cache
+C:\proyecto pw2022\Blog\Net8\SplitMergePdf\obj\Debug\net8.0\SplitMergePdf.AssemblyInfo.cs
+C:\proyecto pw2022\Blog\Net8\SplitMergePdf\obj\Debug\net8.0\SplitMergePdf.csproj.CoreCompileInputs.cache
+C:\proyecto pw2022\Blog\Net8\SplitMergePdf\bin\Debug\net8.0\SplitMergePdf.deps.json
+C:\proyecto pw2022\Blog\Net8\SplitMergePdf\bin\Debug\net8.0\SplitMergePdf.dll
+C:\proyecto pw2022\Blog\Net8\SplitMergePdf\bin\Debug\net8.0\SplitMergePdf.pdb
+C:\proyecto pw2022\Blog\Net8\SplitMergePdf\obj\Debug\net8.0\SplitMergePdf.dll
+C:\proyecto pw2022\Blog\Net8\SplitMergePdf\obj\Debug\net8.0\refint\SplitMergePdf.dll
+C:\proyecto pw2022\Blog\Net8\SplitMergePdf\obj\Debug\net8.0\SplitMergePdf.pdb
+C:\proyecto pw2022\Blog\Net8\SplitMergePdf\obj\Debug\net8.0\ref\SplitMergePdf.dll
