@@ -3,9 +3,17 @@ using System.IO;
 
 namespace SplitMergePdf
 {
+    /// <summary>
+    /// Envoltorio sobre <see cref="System.IO.Path"/> con validación previa de la
+    /// entrada (nulo/vacío y barra final). Centraliza el manejo de rutas para que
+    /// el resto del código no repita comprobaciones. Es <c>internal static</c>:
+    /// utilidad interna de la librería, no se expone a PowerBuilder.
+    /// </summary>
     internal static class FileService
     {
         private static string errorText = "";
+
+        /// <summary>Devuelve el nombre del fichero con extensión (p. ej. "doc.pdf").</summary>
         public static string GetFilename(string fileInput)
         {
 
@@ -32,6 +40,7 @@ namespace SplitMergePdf
             }
         }
 
+        /// <summary>Devuelve la extensión del fichero, incluido el punto (p. ej. ".pdf").</summary>
         public static string GetExtension(string fileInput)
         {
 
@@ -59,6 +68,7 @@ namespace SplitMergePdf
             }
         }
 
+        /// <summary>Devuelve el nombre del fichero sin extensión (p. ej. "doc"). Lo usa el split para nombrar los trozos.</summary>
         public static string GetFileNameWithoutExtension(string fileInput)
         {
             if (EndsInDirectorySeparator(fileInput))
@@ -85,6 +95,7 @@ namespace SplitMergePdf
             }
         }
 
+        /// <summary>Devuelve la ruta con la extensión cambiada por <paramref name="extension"/>.</summary>
         public static string ChangeExtension(string fileInput, string extension)
         {
 
@@ -111,6 +122,7 @@ namespace SplitMergePdf
             }
         }
 
+        /// <summary>Devuelve la carpeta que contiene el fichero (cadena vacía si no hay).</summary>
         public static string GetDirectoryName(string fileInput)
         {
 
@@ -128,8 +140,8 @@ namespace SplitMergePdf
 
             try
             {
-                string fileOut = Path.GetDirectoryName(fileInput);
-                return fileOut;
+                string? fileOut = Path.GetDirectoryName(fileInput);
+                return fileOut ?? string.Empty;
             }
             catch (Exception ex)
             {
@@ -138,6 +150,7 @@ namespace SplitMergePdf
             }
         }
 
+        /// <summary>Indica si la ruta termina en barra ("\" o "/"). Se usa para limpiarla antes de partirla.</summary>
         public static bool EndsInDirectorySeparator(string fileInput)
         {
 
@@ -152,6 +165,11 @@ namespace SplitMergePdf
             return isEndsInDirectorySeparator;
         }
 
+        /// <summary>
+        /// Mueve/renombra <paramref name="fileInput"/> a <paramref name="newFile"/>,
+        /// borrando antes el destino si ya existía (File.Move no sobreescribe). Lo
+        /// usamos para dejar el fichero temporal encima del original.
+        /// </summary>
         public static bool FileRename(string fileInput, string newFile)
         {
 
