@@ -130,10 +130,11 @@ namespace SplitMergePdf
         }
 
         /// <summary>
-        /// Quita la firma digital del PDF aplanando el formulario. Trabaja sobre
-        /// un fichero temporal "_unsing.pdf" y luego lo renombra encima del
-        /// original. Truco: al aplanar, la firma deja de ser válida pero su
-        /// representación visual (si tenía imagen) se conserva en la página.
+        /// Quita la firma digital del PDF aplanando <b>solo</b> los campos de firma
+        /// (/Sig). Trabaja sobre un fichero temporal "_unsing.pdf" y luego lo renombra
+        /// encima del original. Truco: al aplanar, la firma deja de ser válida pero su
+        /// representación visual (la imagen del sello, si tenía) se conserva en la
+        /// página. El resto de campos del formulario quedan intactos e interactivos.
         /// </summary>
         internal void RemoveSign(string inputFile)
         {
@@ -150,9 +151,20 @@ namespace SplitMergePdf
                 PdfDocument pdfDoc = new PdfDocument(reader, writer);
                 PdfAcroForm form = PdfAcroForm.GetAcroForm(pdfDoc, true);
 
-                // FlattenFields "quema" los campos (incluida la firma) en la página:
-                // ya no son interactivos, por eso la firma deja de validar.
-                form.FlattenFields();
+                // Marcamos para aplanado SOLO los campos cuyo tipo es /Sig (firmas).
+                // FlattenFields con campos marcados via PartialFormFlattening aplana
+                // únicamente esos: la imagen del sello se "quema" en la página y el campo
+                // de firma desaparece, mientras los demás campos siguen interactivos.
+                bool anySig = false;
+                foreach (KeyValuePair<string, PdfFormField> entry in form.GetAllFormFields())
+                {
+                    if (PdfName.Sig.Equals(entry.Value.GetFormType()))
+                    {
+                        form.PartialFormFlattening(entry.Key);
+                        anySig = true;
+                    }
+                }
+                if (anySig) form.FlattenFields();
                 pdfDoc.Close();
                 reader.Close();
                 writer.Close();
