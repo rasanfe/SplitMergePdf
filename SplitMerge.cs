@@ -130,11 +130,20 @@ namespace SplitMergePdf
         }
 
         /// <summary>
-        /// Quita la firma digital del PDF aplanando <b>solo</b> los campos de firma
-        /// (/Sig). Trabaja sobre un fichero temporal "_unsing.pdf" y luego lo renombra
-        /// encima del original. Truco: al aplanar, la firma deja de ser válida pero su
-        /// representación visual (la imagen del sello, si tenía) se conserva en la
-        /// página. El resto de campos del formulario quedan intactos e interactivos.
+        /// Deja el PDF listo para fusionar quitando la firma y todo lo que hace que
+        /// Acrobat se queje del documento unido. Trabaja sobre un fichero temporal
+        /// "_unsing.pdf" y luego lo renombra encima del original. Hace, en orden:
+        ///   1) Quita las marcas de firma del catálogo (/Perms, /DSS) y del AcroForm
+        ///      (/XFA): tras la fusión quedarían colgando y Acrobat las daría por
+        ///      inválidas (los navegadores las ignoran, por eso allí se ve bien).
+        ///   2) Elimina los push-button SIN apariencia (/AP /N): al aplanar, iText los
+        ///      quemaría como un recuadro GRIS (placeholders de logo vacíos en los
+        ///      formularios SAP/XFA). Los que sí tienen imagen (logos) se conservan.
+        ///   3) Aplana TODO el formulario: iText genera la apariencia /AP de cada campo
+        ///      desde su valor /V y la "quema" en la página. Imprescindible para los
+        ///      formularios SAP/XFA (sus campos no traen /AP estático y Acrobat ignora
+        ///      /NeedAppearances: sin aplanar saldrían en blanco). También quema la
+        ///      imagen de la firma visible y elimina firmas y formulario.
         /// </summary>
         internal void RemoveSign(string inputFile)
         {
@@ -149,22 +158,48 @@ namespace SplitMergePdf
                 PdfWriter writer = new PdfWriter(outputFile).SetSmartMode(true);
 
                 PdfDocument pdfDoc = new PdfDocument(reader, writer);
-                PdfAcroForm form = PdfAcroForm.GetAcroForm(pdfDoc, true);
 
-                // Marcamos para aplanado SOLO los campos cuyo tipo es /Sig (firmas).
-                // FlattenFields con campos marcados via PartialFormFlattening aplana
-                // únicamente esos: la imagen del sello se "quema" en la página y el campo
-                // de firma desaparece, mientras los demás campos siguen interactivos.
-                bool anySig = false;
-                foreach (KeyValuePair<string, PdfFormField> entry in form.GetAllFormFields())
+                // 1) Marcas de firma a nivel catálogo (/Perms = certificación / Reader-Enabled UR3,
+                //    /DSS = LTV). FlattenFields no las toca, así que las quitamos a mano.
+                PdfDictionary catalog = pdfDoc.GetCatalog().GetPdfObject();
+                catalog.Remove(PdfName.Perms);
+                catalog.Remove(new PdfName("DSS"));
+
+                PdfAcroForm form = PdfAcroForm.GetAcroForm(pdfDoc, false);
+                if (form != null)
                 {
-                    if (PdfName.Sig.Equals(entry.Value.GetFormType()))
+                    // /XFA fuera: con XFA presente, iText aplana la representación estática del
+                    // AcroForm (la que queremos quemar), no el formulario dinámico.
+                    form.GetPdfObject().Remove(PdfName.XFA);
+
+                    // 2) Eliminar los push-button SIN /AP /N (se quemarían grises).
+                    List<string> toRemove = new List<string>();
+                    foreach (KeyValuePair<string, PdfFormField> entry in form.GetAllFormFields())
                     {
-                        form.PartialFormFlattening(entry.Key);
-                        anySig = true;
+                        bool push = PdfName.Btn.Equals(entry.Value.GetFormType())
+                                    && (entry.Value.GetFieldFlags() & (1 << 16)) != 0;
+                        if (!push) continue;
+                        bool hasAppearance = false;
+                        var widgets = entry.Value.GetWidgets();
+                        if (widgets != null)
+                        {
+                            foreach (var w in widgets)
+                            {
+                                if (w.GetPdfObject().GetAsDictionary(PdfName.AP)?.Get(PdfName.N) is PdfStream)
+                                {
+                                    hasAppearance = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!hasAppearance) toRemove.Add(entry.Key);
                     }
+                    foreach (string name in toRemove) form.RemoveField(name);
+
+                    // 3) Aplanar TODO (datos + imagen de firma -> /AP en la página).
+                    form.FlattenFields();
                 }
-                if (anySig) form.FlattenFields();
+
                 pdfDoc.Close();
                 reader.Close();
                 writer.Close();
